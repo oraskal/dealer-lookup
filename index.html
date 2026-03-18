@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>시군구별 대리점 조회</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", Arial, sans-serif;
+      background: #f3f6fb;
+      color: #111827;
+    }
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+      padding: 22px 18px;
+      margin-top: 18px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+    p.desc {
+      margin: 0 0 20px;
+      color: #6b7280;
+      line-height: 1.55;
+      font-size: 15px;
+    }
+    .field {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 800;
+      font-size: 14px;
+    }
+    input, select, button {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 6px;
+      min-height: 56px;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+    }
+    button {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    .result {
+      margin-top: 22px;
+      padding: 18px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      min-height: 100px;
+    }
+    .result-title {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+    .dealer-name {
+      font-size: 24px;
+      font-weight: 900;
+      color: #111827;
+      margin-bottom: 8px;
+      line-height: 1.3;
+      word-break: keep-all;
+    }
+    .meta {
+      color: #4b5563;
+      line-height: 1.6;
+    }
+    .not-found {
+      color: #dc2626;
+      font-weight: 700;
+    }
+    .hint {
+      margin-top: 18px;
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .chip {
+      border: 1px solid #dbe3f0;
+      background: #f8fafc;
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      color: #475569;
+    }
+    @media (max-width: 480px) {
+      .wrap {
+        padding: 12px 12px 28px;
+      }
+      .card {
+        padding: 18px 14px;
+        border-radius: 18px;
+      }
+      h1 {
+        font-size: 24px;
+      }
+      .dealer-name {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>시군구별 대리점 조회</h1>
+      <p class="desc">시도/시군구를 선택하거나 직접 입력하면 배정된 대리점을 바로 확인할 수 있습니다. 아이폰에서도 누르기 편하게 구성했습니다.</p>
+
+      
+        <div class="chip">예: 서울특별시 강남구</div>
+        <div class="chip">예: 전주시 완산구</div>
+      </div>
+
+      <div class="field">
+        <label for="sidoSelect">시도 선택</label>
+        <select id="sidoSelect">
+          <option value="">선택하세요</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="sigunguSelect">시군구 선택</label>
+        <select id="sigunguSelect" disabled>
+          <option value="">시도를 먼저 선택하세요</option>
+        </select>
+      </div>
+
+      <div class="result" id="resultBox">
+        <div class="result-title">조회 결과</div>
+        <div class="meta">시군구를 선택하거나 입력 후 조회 버튼을 누르세요.</div>
+      </div>
+
+      <div class="hint">
+        드롭다운에서 시군구를 선택하면 배정 대리점이 바로 표시됩니다.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const dealerData = [
+      { sigungu: "강원특별자치도 강릉시", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 고성군", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 동해시", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 삼척시", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 속초시", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 양구군", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 양양군", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 영월군", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 원주시", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 인제군", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 정선군", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 철원군", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "강원특별자치도 춘천시", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 태백시", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 평창군", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 홍천군", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 화천군", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "강원특별자치도 횡성군", dealer: "아이포커스", contact: "", note: "" },
+      { sigungu: "경기도 가평군", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "경기도 고양시", dealer: "이안메드", contact: "", note: "" },
+      { sigungu: "경기도 고양시 덕양구", dealer: "이안메드", contact: "", note: "" },
+      { sigungu: "경기도 고양시 일산동구", dealer: "이안메드", contact: "", note: "" },
+      { sigungu: "경기도 고양시 일산서구", dealer: "이안메드", contact: "", note: "" },
+      { sigungu: "경기도 과천시", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "경기도 광명시", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "경기도 광주시", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 구리시", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "경기도 군포시", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "경기도 김포시", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "경기도 남양주시", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "경기도 동두천시", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "경기도 부천시", dealer: "비즈현메디칼", contact: "", note: "" },
+      { sigungu: "경기도 부천시 소사구", dealer: "비즈현메디칼", contact: "", note: "" },
+      { sigungu: "경기도 부천시 오정구", dealer: "비즈현메디칼", contact: "", note: "" },
+      { sigungu: "경기도 부천시 원미구", dealer: "비즈현메디칼", contact: "", note: "" },
+      { sigungu: "경기도 성남시", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 성남시 분당구", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 성남시 수정구", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 성남시 중원구", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 수원시", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 수원시 권선구", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 수원시 영통구", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 수원시 장안구", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 수원시 팔달구", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 시흥시", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "경기도 안산시", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "경기도 안산시 단원구", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "경기도 안산시 상록구", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "경기도 안성시", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 안양시", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "경기도 안양시 동안구", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "경기도 안양시 만안구", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "경기도 양주시", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "경기도 양평군", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "경기도 여주시", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 연천군", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "경기도 오산시", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 용인시", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 용인시 기흥구", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 용인시 수지구", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 용인시 처인구", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 의왕시", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "경기도 의정부시", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "경기도 이천시", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 파주시", dealer: "이안메드", contact: "", note: "" },
+      { sigungu: "경기도 평택시", dealer: "에버넷", contact: "", note: "" },
+      { sigungu: "경기도 포천시", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "경기도 하남시", dealer: "유비케어_강남", contact: "", note: "" },
+      { sigungu: "경상남도 거제시", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 거창군", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 고성군", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 김해시", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 남해군", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 밀양시", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 사천시", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 산청군", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 양산시", dealer: "메디플랜", contact: "", note: "" },
+      { sigungu: "경상남도 의령군", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 진주시", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 창녕군", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 창원시", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 창원시 마산합포구", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 창원시 마산회원구", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 창원시 성산구", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 창원시 의창구", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 창원시 진해구", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 통영시", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 하동군", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 함안군", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 함양군", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상남도 합천군", dealer: "디라인", contact: "", note: "" },
+      { sigungu: "경상북도 경산시", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "경상북도 경주시", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "경상북도 고령군", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "경상북도 구미시", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "경상북도 군위군", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "경상북도 김천시", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "경상북도 문경시", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "경상북도 봉화군", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "경상북도 상주시", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "경상북도 성주군", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "경상북도 안동시", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "경상북도 영덕군", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "경상북도 영양군", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "경상북도 영주시", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "경상북도 영천시", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "경상북도 예천군", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "경상북도 울릉군", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "경상북도 울진군", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "경상북도 의성군", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "경상북도 청도군", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "경상북도 청송군", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "경상북도 칠곡군", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "경상북도 포항시", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "경상북도 포항시 남구", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "경상북도 포항시 북구", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "광주광역시", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "광주광역시 광산구", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "광주광역시 남구", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "광주광역시 동구", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "광주광역시 북구", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "광주광역시 서구", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "대구광역시 남구", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "대구광역시 달서구", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "대구광역시 달성군", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "대구광역시 동구", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "대구광역시 북구", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "대구광역시 서구", dealer: "올댓메디", contact: "", note: "" },
+      { sigungu: "대구광역시 수성구", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "대구광역시 중구", dealer: "동원메디텍", contact: "", note: "" },
+      { sigungu: "대전광역시", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "대전광역시 대덕구", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "대전광역시 동구", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "대전광역시 서구", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "대전광역시 유성구", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "대전광역시 중구", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "부산광역시 강서구", dealer: "올케어플러스", contact: "", note: "" },
+      { sigungu: "부산광역시 금정구", dealer: "메디플랜", contact: "", note: "" },
+      { sigungu: "부산광역시 기장군", dealer: "메디플랜", contact: "", note: "" },
+      { sigungu: "부산광역시 남구", dealer: "올케어플러스", contact: "", note: "" },
+      { sigungu: "부산광역시 동구", dealer: "올케어플러스", contact: "", note: "" },
+      { sigungu: "부산광역시 동래구", dealer: "메디플랜", contact: "", note: "" },
+      { sigungu: "부산광역시 북구", dealer: "올케어플러스", contact: "", note: "" },
+      { sigungu: "부산광역시 사상구", dealer: "올케어플러스", contact: "", note: "" },
+      { sigungu: "부산광역시 사하구", dealer: "올케어플러스", contact: "", note: "" },
+      { sigungu: "부산광역시 서구", dealer: "올케어플러스", contact: "", note: "" },
+      { sigungu: "부산광역시 수영구", dealer: "올케어플러스", contact: "", note: "" },
+      { sigungu: "부산광역시 연제구", dealer: "올케어플러스", contact: "", note: "" },
+      { sigungu: "부산광역시 영도구", dealer: "올케어플러스", contact: "", note: "" },
+      { sigungu: "부산광역시 중구", dealer: "올케어플러스", contact: "", note: "" },
+      { sigungu: "부산광역시 부산진구", dealer: "올케어플러스", contact: "", note: "" },
+      { sigungu: "부산광역시 해운대구", dealer: "메디플랜", contact: "", note: "" },
+      { sigungu: "서울특별시 강남구", dealer: "유비케어_강남", contact: "", note: "" },
+      { sigungu: "서울특별시 강동구", dealer: "유비케어_강남", contact: "", note: "" },
+      { sigungu: "서울특별시 강북구", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "서울특별시 강서구", dealer: "비즈현메디칼", contact: "", note: "" },
+      { sigungu: "서울특별시 관악구", dealer: "비즈현메디칼", contact: "", note: "" },
+      { sigungu: "서울특별시 광진구", dealer: "이안메드", contact: "", note: "" },
+      { sigungu: "서울특별시 구로구", dealer: "비즈현메디칼", contact: "", note: "" },
+      { sigungu: "서울특별시 금천구", dealer: "비즈현메디칼", contact: "", note: "" },
+      { sigungu: "서울특별시 노원구", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "서울특별시 도봉구", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "서울특별시 동대문구", dealer: "이안메드", contact: "", note: "" },
+      { sigungu: "서울특별시 동작구", dealer: "비즈현메디칼", contact: "", note: "" },
+      { sigungu: "서울특별시 마포구", dealer: "이안메드", contact: "", note: "" },
+      { sigungu: "서울특별시 서대문구", dealer: "이안메드", contact: "", note: "" },
+      { sigungu: "서울특별시 서초구", dealer: "유비케어_강남", contact: "", note: "" },
+      { sigungu: "서울특별시 성동구", dealer: "이안메드", contact: "", note: "" },
+      { sigungu: "서울특별시 성북구", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "서울특별시 송파구", dealer: "유비케어_강남", contact: "", note: "" },
+      { sigungu: "서울특별시 양천구", dealer: "비즈현메디칼", contact: "", note: "" },
+      { sigungu: "서울특별시 영등포구", dealer: "비즈현메디칼", contact: "", note: "" },
+      { sigungu: "서울특별시 용산구", dealer: "이안메드", contact: "", note: "" },
+      { sigungu: "서울특별시 은평구", dealer: "이안메드", contact: "", note: "" },
+      { sigungu: "서울특별시 종로구", dealer: "이안메드", contact: "", note: "" },
+      { sigungu: "서울특별시 중구", dealer: "이안메드", contact: "", note: "" },
+      { sigungu: "서울특별시 중랑구", dealer: "세일메디넷", contact: "", note: "" },
+      { sigungu: "세종특별자치시", dealer: "메디케어", contact: "", note: "" },
+      { sigungu: "울산광역시", dealer: "메디플랜", contact: "", note: "" },
+      { sigungu: "울산광역시 남구", dealer: "메디플랜", contact: "", note: "" },
+      { sigungu: "울산광역시 동구", dealer: "메디플랜", contact: "", note: "" },
+      { sigungu: "울산광역시 북구", dealer: "메디플랜", contact: "", note: "" },
+      { sigungu: "울산광역시 울주군", dealer: "메디플랜", contact: "", note: "" },
+      { sigungu: "울산광역시 중구", dealer: "메디플랜", contact: "", note: "" },
+      { sigungu: "인천광역시", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "인천광역시 강화군", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "인천광역시 계양구", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "인천광역시 미추홀구", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "인천광역시 남동구", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "인천광역시 동구", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "인천광역시 부평구", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "인천광역시 서구", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "인천광역시 연수구", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "인천광역시 옹진군", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "인천광역시 중구", dealer: "유비케어_경인", contact: "", note: "" },
+      { sigungu: "전라남도 강진군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 고흥군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 곡성군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 광양시", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 구례군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 나주시", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 담양군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 목포시", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 무안군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 보성군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 순천시", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 신안군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 여수시", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 영광군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 영암군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 완도군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 장성군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 장흥군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 진도군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 함평군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 해남군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전라남도 화순군", dealer: "리드케어", contact: "", note: "" },
+      { sigungu: "전북특별자치도 고창군", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 군산시", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 김제시", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 남원시", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 무주군", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 부안군", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 순창군", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 완주군", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 익산시", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 임실군", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 장수군", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 전주시", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 전주시 덕진구", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 전주시 완산구", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 정읍시", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "전북특별자치도 진안군", dealer: "이오넷", contact: "", note: "" },
+      { sigungu: "제주특별자치도", dealer: "제주메디넷", contact: "", note: "" },
+      { sigungu: "제주특별자치도 서귀포시", dealer: "제주메디넷", contact: "", note: "" },
+      { sigungu: "제주특별자치도 제주시", dealer: "제주메디넷", contact: "", note: "" },
+      { sigungu: "충청남도 계룡시", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 공주시", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 금산군", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 논산시", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 당진시", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 보령시", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 부여군", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 서산시", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 서천군", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 아산시", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 예산군", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 천안시", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 천안시 동남구", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 천안시 서북구", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 청양군", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 태안군", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청남도 홍성군", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청북도 괴산군", dealer: "메디케어", contact: "", note: "" },
+      { sigungu: "충청북도 단양군", dealer: "메디케어", contact: "", note: "" },
+      { sigungu: "충청북도 보은군", dealer: "메디케어", contact: "", note: "" },
+      { sigungu: "충청북도 영동군", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청북도 옥천군", dealer: "메디네트", contact: "", note: "" },
+      { sigungu: "충청북도 음성군", dealer: "메디케어", contact: "", note: "" },
+      { sigungu: "충청북도 제천시", dealer: "메디케어", contact: "", note: "" },
+      { sigungu: "충청북도 증평군", dealer: "메디케어", contact: "", note: "" },
+      { sigungu: "충청북도 진천군", dealer: "메디케어", contact: "", note: "" },
+      { sigungu: "충청북도 청주시", dealer: "메디케어", contact: "", note: "" },
+      { sigungu: "충청북도 청주시 상당구", dealer: "메디케어", contact: "", note: "" },
+      { sigungu: "충청북도 청주시 서원구", dealer: "메디케어", contact: "", note: "" },
+      { sigungu: "충청북도 청주시 청원구", dealer: "메디케어", contact: "", note: "" },
+      { sigungu: "충청북도 청주시 흥덕구", dealer: "메디케어", contact: "", note: "" },
+      { sigungu: "충청북도 충주시", dealer: "메디케어", contact: "", note: "" }
+    ];
+
+    const sidoEl = document.getElementById('sidoSelect');
+    const selectEl = document.getElementById('sigunguSelect');
+        const resultBox = document.getElementById('resultBox');
+    
+    function normalize(text) {
+      return (text || '').replace(/\s+/g, '').trim().toLowerCase();
+    }
+
+    function getSido(sigungu) {
+      const parts = (sigungu || '').trim().split(/\s+/);
+      return parts[0] || '';
+    }
+
+    function renderOptions() {
+      const sidoList = [...new Set(dealerData.map(item => getSido(item.sigungu)).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, 'ko'));
+
+      sidoList.forEach(sido => {
+        const option = document.createElement('option');
+        option.value = sido;
+        option.textContent = sido;
+        sidoEl.appendChild(option);
+      });
+    }
+
+    function renderSigunguOptions(selectedSido) {
+      selectEl.innerHTML = '';
+
+      if (!selectedSido) {
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = '시도를 먼저 선택하세요';
+        selectEl.appendChild(placeholder);
+        selectEl.disabled = true;
+        return;
+      }
+
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = '선택하세요';
+      selectEl.appendChild(placeholder);
+
+      const sigunguList = dealerData
+        .filter(item => getSido(item.sigungu) === selectedSido)
+        .map(item => item.sigungu)
+        .sort((a, b) => a.localeCompare(b, 'ko'));
+
+      sigunguList.forEach(sigungu => {
+        const option = document.createElement('option');
+        option.value = sigungu;
+        option.textContent = sigungu;
+        selectEl.appendChild(option);
+      });
+
+      selectEl.disabled = false;
+    }
+
+    function searchDealer() {
+      const selectedValue = selectEl.value;
+      const normalizedKeyword = normalize(selectedValue);
+
+      if (!normalizedKeyword) {
+        resultBox.innerHTML = `
+          <div class="result-title">조회 결과</div>
+          <div class="meta">시도와 시군구를 선택하면 배정 대리점이 표시됩니다.</div>
+        `;
+        return;
+      }
+
+      const found = dealerData.find(item => normalize(item.sigungu) === normalizedKeyword);
+
+      if (found) {
+        resultBox.innerHTML = `
+          <div class="result-title">조회 결과</div>
+          <div class="dealer-name">${found.dealer}</div>
+          <div class="meta">
+            담당 지역: ${found.sigungu}
+          </div>
+        `;
+      } else {
+        resultBox.innerHTML = `
+          <div class="result-title">조회 결과</div>
+          <div class="not-found">해당 시군구에 배정된 대리점 정보가 없습니다.</div>
+        `;
+      }
+    }
+
+    sidoEl.addEventListener('change', () => {
+      renderSigunguOptions(sidoEl.value);
+      resultBox.innerHTML = `
+        <div class="result-title">조회 결과</div>
+        <div class="meta">시군구를 선택하면 배정 대리점이 표시됩니다.</div>
+      `;
+    });
+
+    selectEl.addEventListener('change', searchDealer);
+
+    
+
+    renderOptions();
+  </script>
+</body>
+</html>
